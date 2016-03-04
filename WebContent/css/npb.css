@@ -1,0 +1,63 @@
+body {
+  padding: 5px;
+  min-width:250px;
+}
+
+#user-image {
+  margin:5px;
+  border:2px solid black;
+  vertical-align:middle;
+  width:75px;
+  height:75px;
+}
+
+.btn-dark {
+background-color: #414141;
+background-image: -ms-linear-gradient(top, #555555, #222222);
+background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#555555), to(#222222));
+background-image: -webkit-linear-gradient(top, #555555, #222222);
+background-image: -o-linear-gradient(top, #555555, #222222);
+background-image: -moz-linear-gradient(top, #555555, #222222);
+background-image: linear-gradient(top, #555555, #222222);
+background-repeat: repeat-x;
+border-color: #222222 #222222 #000000;
+border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
+filter: progid:dximagetransform.microsoft.gradient(startColorstr='#555555', endColorstr='#222222', GradientType=0);
+filter: progid:dximagetransform.microsoft.gradient(enabled=false);
+color: #ffffff;
+text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
+}
+.btn-dark .caret {
+	border-top: 4px solid #ffffff;
+}
+.login-form .form-control {
+   margin-bottom: 5px;
+   margin-top: 5px;
+   min-width: 250px;
+}
+
+#activity-table {
+	width: 700px;
+	margin-bottom: 0px;
+}
+
+#activity-table-row .pagination {
+	margin: 5px 0;
+}
+
+.logged-in-ind {
+  #background-image:url('../img/tick.png');
+  #min-width:16px;
+  #min-height:16px;
+  #background-repeat:no-repeat;
+  #background-position:right top;
+}
+
+.downloadGPX {
+  /**background-image:url('../img/gpx.png'); 
+  min-width:55px;
+  min-height:55px;
+  background-repeat:no-repeat;
+  background-position:right top;
+  */
+}

@@ -1,0 +1,18 @@
+{
+  "name": "NikePlus Exporter",
+  "version": "1.46",
+  "manifest_version": 2,
+  "description": "Exports Nike+ data in GPX or TCX formats for import into other services",
+  "icons": {
+  	"16": "img/npe-icon-black.png",
+    "48": "img/npe-icon-black.png",
+    "128": "img/npe-icon-black.png"
+  },
+  "browser_action": {
+    "default_icon": "img/npe-icon-black.png",
+    "default_popup": "popup.html"
+  },
+  "permissions": [
+    "tabs", "http://nikeplus.nike.com/*", "https://secure-nikeplus.nike.com/*"
+  ]
+}
