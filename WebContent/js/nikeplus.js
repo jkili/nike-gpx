@@ -317,7 +317,7 @@ function createTCX(data) {
 	
 	// XML
 	var doc = document.implementation.createDocument(
-			"http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2", "TrainingCenterDatabase", "null");
+			"http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2", "TrainingCenterDatabase", null);
 	doc.documentElement
 			.setAttribute(
 					"xsi:schemaLocation",
@@ -484,7 +484,7 @@ function createGPX(data) {
 
 	// XML
 	var doc = document.implementation.createDocument(
-			"http://www.topografix.com/GPX/1/1", "gpx", "null");
+			"http://www.topografix.com/GPX/1/1", "gpx", null);
 	doc.documentElement
 			.setAttribute(
 					"xsi:schemaLocation",
