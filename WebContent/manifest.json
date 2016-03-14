@@ -1,6 +1,6 @@
 {
   "name": "NikePlus Exporter",
-  "version": "1.46",
+  "version": "1.48",
   "manifest_version": 2,
   "description": "Exports Nike+ data in GPX or TCX formats for import into other services",
   "icons": {

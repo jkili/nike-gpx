@@ -92,8 +92,6 @@ function initScreen() {
 	document.getElementById("logged-in-ind").style.display = "";
 	document.getElementById("logged-in-ind").className = "logged-in-ind";
 	document.getElementById("user").innerHTML = firstName + " " + lastName + "(" + screenName + ")";
-	//document.getElementById("user-image").src = imageUrl;
-	//document.getElementById("user-image").style.display = "";
 	getActivities();
 }
 
@@ -203,7 +201,6 @@ function addRows(page) {
 	for (i = startIndex; i < startIndex + perPage; i++) {
 		if(typeof(activities[i]) != "undefined"){
 		var row = document.createElement("tr");
-		//var colIND = document.createElement("td");
 		var col1 = document.createElement("td");
 		var col2 = document.createElement("td");
 		var col3 = document.createElement("td");
@@ -216,7 +213,6 @@ function addRows(page) {
 		row.appendChild(col3);
 		row.appendChild(col4);
 		row.appendChild(col5);
-		//row.appendChild(colIND);
 		row.appendChild(col6);
 		tableBody.appendChild(row);
 		col1.innerHTML = activities[i].activity.startTimeUtc;
@@ -317,7 +313,7 @@ function createTCX(data) {
 	
 	// XML
 	var doc = document.implementation.createDocument(
-			"http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2", "TrainingCenterDatabase", "null");
+			"http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2", "TrainingCenterDatabase", null);
 	doc.documentElement
 			.setAttribute(
 					"xsi:schemaLocation",
@@ -484,7 +480,7 @@ function createGPX(data) {
 
 	// XML
 	var doc = document.implementation.createDocument(
-			"http://www.topografix.com/GPX/1/1", "gpx", "null");
+			"http://www.topografix.com/GPX/1/1", "gpx", null);
 	doc.documentElement
 			.setAttribute(
 					"xsi:schemaLocation",
@@ -514,12 +510,23 @@ function createGPX(data) {
 	metadata.appendChild(time);
 	name.appendChild(doc.createTextNode(data.name));
 	metadata.appendChild(desc);
+	var notes = "";
 	if(typeof(data.tags.note) !== "undefined") {
-		desc.appendChild(doc.createTextNode(data.tags.note + " #nike+"));
+        notes = notes + data.tags.note;
 	} else {
-		desc.appendChild(doc.createTextNode(data.name + " #nike+"));
+		notes = notes + data.name;
 	}
-		
+    if(typeof(data.tags.emotion) !== "undefined") {
+        notes = notes + " #" + data.tags.emotion;
+    }
+    if(typeof(data.tags.weather) !== "undefined") {
+        notes = notes + " #" + data.tags.weather;
+    }
+    if(typeof(data.tags.terrain) !== "undefined") {
+        notes = notes + " #" + data.tags.terrain;
+    }
+    desc.appendChild(doc.createTextNode(notes + " #nike+"));
+
 	time.appendChild(doc.createTextNode(data.startTimeUtc));
 
 	// Bounds
@@ -573,9 +580,10 @@ function createGPX(data) {
 	// Save File
 	var xml = xml2Str(doc.documentElement);
 	updateSM("GPX File: " + xml);
-	var parts = ['<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n',xml];
+	var parts = ['<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n',prettyXml(xml)];
 	var blob = new Blob(parts, {type : 'text/plain'});
-	var fileName = data.activityId + ".gpx";
+    var timeSegment = data.startTimeUtc.split("T");
+	var fileName = timeSegment[0] + "_" + timeSegment[1].substring(0,5).replace(":","") + ".gpx";
 	saveAs(blob, fileName);
 	updateSM("SaveAs complete");
 
@@ -627,8 +635,8 @@ function appendPt(doc, seg, point, name) {
 	var trkpt = doc.createElement(name);
 	seg.appendChild(trkpt);
 
-	trkpt.setAttribute("lat", point.lat);
 	trkpt.setAttribute("lon", point.lon);
+	trkpt.setAttribute("lat", point.lat);
 
 	var ele = doc.createElement("ele");
 	trkpt.appendChild(ele);
@@ -669,13 +677,12 @@ function appendTCXTrackPoint(doc, seg, point, name) {
 	
 	var lat = doc.createElement("LatitudeDegrees");
 	var lon = doc.createElement("LongitudeDegrees");
-	lat.appendChild(doc.createTextNode(point.lat));
 	lon.appendChild(doc.createTextNode(point.lon));
-	pos.appendChild(lat);
 	pos.appendChild(lon);
-	
+	lat.appendChild(doc.createTextNode(point.lat));
+	pos.appendChild(lat);
+
 	var ele = doc.createElement("AltitudeMeters");
-	//trkpt.appendChild(ele);
 	ele.appendChild(doc.createTextNode(point.ele));
 
 	if (typeof (point.hr) !== "undefined" && point.hr != 0) {
@@ -691,7 +698,6 @@ function processSplits(data) {
 		return;
 	}
 	var distanceData;
-	//var distanceData = findDistanceData(data);
 	 
 	var startDate = new Date(data.startTimeUtc);
 	var startMs = startDate.getTime();
@@ -714,9 +720,6 @@ function processSplits(data) {
 			// Add the HR data and time to trkpt at split
 			pt.hr = split.heartRate;		
 			pt.time = getISOFromDuration(data, startMs, split.duration);
-			// updateSM("Found split: " + split.distance + " on waypoint: " + i
-			// + "(lat: " + pt.lat + ", long: " + pt.lon + "). Time: " + pt.time
-			// + "; " + (split.duration));
 			processGap(data, lastSplitIdx, i, split.duration
 					- lastSplitDuration, startMs + lastSplitDuration, distanceData);
 			curSplit++;
@@ -747,7 +750,6 @@ function processGap(data, fromIdx, toIdx, split, startMs, distanceData) {
 		var loop = 1;
 		for (i = fromIdx + 1; i < toIdx; i++) {
 			data.geo.waypoints[i].time = getISOFromDuration(data, startMs, (inc * loop));
-			//matchDistanceData(distanceData, (inc * loop), data.geo.waypoints[i].time);
 			loop++;
 		}
 	}
@@ -757,7 +759,6 @@ function findDistanceData(data) {
 	// Find distance element
 	if(typeof(data.history) == "undefined") {
 		// No history distance data
-		//updateSM("No History/Distance data to append.");
 		return;
 	}
 	var distPos = -1;
@@ -770,12 +771,10 @@ function findDistanceData(data) {
 	
 	if(distPos == -1) {
 		// No history distance data
-		//updateSM("No distance data found in History.");
 		return;
 	}
 	
 	if(data.history[i].intervalType != "TIME" && data.history[i].intervalUnit != "SEC") {
-		//updateSM("We only understance Time type intervals and Second based interval units.");
 		return;
 	}
 	
@@ -803,10 +802,12 @@ function matchDistanceData(distanceData, time, pt) {
 
 function getTimeWithDuration(data, start, offset) {
 	var tz = getTZ(data);
+
+    // Correct UTC tme according to timezone
 	var tzh = tz.substring(1, tz.indexOf(":"));
 	var op = tz.substring(0, 1);
 	var tzm = tz.substring(tz.indexOf(":") + 1);
-	// updateSM("TZH: " + tzh + ", op: " + op + ", TZM: " + tzm);
+	//updateSM("TZH: " + tzh + ", op: " + op + ", TZM: " + tzm);
 	var tzms = tzh * 1000 * 60 * 60;
 	var tzms = tzms + (tzm * 1000 * 60);
 	var i = start + offset;
@@ -821,7 +822,7 @@ function getISOFromDuration(data, start, offset) {
 	
 	var d = new Date(getTimeWithDuration(data, start, offset));
 	var str = d.toISOString();
-	return str.substring(0, str.length - 1) + getTZ(data);
+	return str.substring(0, str.length - 1) + "" + getTZ(data);
 }
 
 function getTZ(data) {
@@ -839,7 +840,7 @@ function getTZ(data) {
 				return data.timeZoneId;
 			}
 
-			return data.timeZoneId.substring(ix+1);
+			return data.timeZoneId.substring(ix);
 		}
 	} else {
 		return data.timeZone;
@@ -860,8 +861,8 @@ function appendWpt(doc, seg, point, startMs) {
 	var trkpt = doc.createElement("wpt");
 	seg.appendChild(trkpt);
 
-	trkpt.setAttribute("lat", point.gpsLat);
 	trkpt.setAttribute("lon", point.gpsLong);
+	trkpt.setAttribute("lat", point.gpsLat);
 
 	if (typeof (point.duration) !== "undefined") {
 		var time = doc.createElement("time");
@@ -891,6 +892,57 @@ function xml2Str(xmlNode) {
 	}
 	return false;
 }
+
+function prettyXml(xml) {
+    var reg = /(>)(<)(\/*)/g;
+    var wsexp = / *(.*) +\n/g;
+    var contexp = /(<.+>)(.+\n)/g;
+    xml = xml.replace(reg, '$1\n$2$3').replace(wsexp, '$1\n').replace(contexp, '$1\n$2');
+    var pad = 0;
+    var formatted = '';
+    var lines = xml.split('\n');
+    var indent = 0;
+    var lastType = 'other';
+    // 4 types of tags - single, closing, opening, other (text, doctype, comment) - 4*4 = 16 transitions
+    var transitions = {
+        'single->single'    : 0,
+        'single->closing'   : -1,
+        'single->opening'   : 0,
+        'single->other'     : 0,
+        'closing->single'   : 0,
+        'closing->closing'  : -1,
+        'closing->opening'  : 0,
+        'closing->other'    : 0,
+        'opening->single'   : 1,
+        'opening->closing'  : 0,
+        'opening->opening'  : 1,
+        'opening->other'    : 1,
+        'other->single'     : 0,
+        'other->closing'    : -1,
+        'other->opening'    : 0,
+        'other->other'      : 0
+    };
+
+    for (var i=0; i < lines.length; i++) {
+        var ln = lines[i];
+        var single = Boolean(ln.match(/<.+\/>/)); // is this line a single tag? ex. <br />
+        var closing = Boolean(ln.match(/<\/.+>/)); // is this a closing tag? ex. </a>
+        var opening = Boolean(ln.match(/<[^!].*>/)); // is this even a tag (that's not <!something>)
+        var type = single ? 'single' : closing ? 'closing' : opening ? 'opening' : 'other';
+        var fromTo = lastType + '->' + type;
+        lastType = type;
+        var padding = '';
+
+        indent += transitions[fromTo];
+        for (var j = 0; j < indent; j++) {
+            padding += '    ';
+        }
+
+        formatted += padding + ln + '\n';
+    }
+
+    return formatted;
+};
 
 window.onload = function() {
 };
