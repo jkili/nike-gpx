@@ -5,7 +5,7 @@
 var email, screenName, userId, profileId, firstName, lastName, imageUrl;
 var loggedIn;
 var VERSION_MAJOR = "1";
-var VERSION_MINOR = "46";
+var VERSION_MINOR = "49";
 var invert = false;
 
 $(document).ready(function() {
@@ -99,6 +99,13 @@ function loginComplete() {
 	
 	$("#loading").css('display', 'none');
 	updateSM("Response: " + req.responseText);
+	if (req.responseText.indexOf('<') == 0) {
+		$("#loading-table").css('display', 'none');
+		$("#alert-error-message").html("Failed to login.");
+		$("#alert-error").css('display', '');
+		updateSM("No login info found. JSON: " + req.responseText);
+		return;
+	}
 	var json = JSON.parse(req.responseText, null);
 	json = json.serviceResponse;
 	if (json.header.success == "true") {
@@ -149,26 +156,33 @@ function handleActivitiesLoad() {
 	try {
 		updateSM("handleActivitiesLoad Response: " + req.responseText);
 		$("#activity-table-row").css('display', '');
-		
-	var json = JSON.parse(req.responseText, null);
-	activities = json.activities;
-	if(typeof(activities) == "undefined") {
-		$("#loading-table").css('display', 'none');
-		$("#alert-error-message").html("No activities found. JSON: " + req.responseText);
-		$("#alert-error").css('display', '');
-		updateSM("No activities found. JSON: " + req.responseText);
-		return;
-	}
-	
-	totalRows = activities.length;
-	
-	activities.reverse();
-	
-	$("#pager").pagination(totalRows, {
-		items_per_page : perPage,
-		callback : loadContents
-	});
-	
+		if (req.responseText.indexOf('<') > -1) {
+			$("#loading-table").css('display', 'none');
+			$("#alert-error-message").html("No JSON activities found");
+			$("#alert-error").css('display', '');
+			updateSM("No activities found. JSON: " + req.responseText);
+			return;
+		}
+
+		var json = JSON.parse(req.responseText, null);
+		activities = json.activities;
+		if(typeof(activities) == "undefined") {
+			$("#loading-table").css('display', 'none');
+			$("#alert-error-message").html("No activities found");
+			$("#alert-error").css('display', '');
+			updateSM("No activities found. JSON: " + req.responseText);
+			return;
+		}
+
+		totalRows = activities.length;
+
+		activities.reverse();
+
+		$("#pager").pagination(totalRows, {
+			items_per_page : perPage,
+			callback : loadContents
+		});
+
 	}
 	catch(err){
 		$("#loading-table").css('display', 'none');
@@ -781,7 +795,6 @@ function findDistanceData(data) {
 	var interval = data.history[i].intervalMetric;
 	var distValues = data.history[i].values;
 	
-
 	
 	return [interval, distValues];
 }
@@ -825,6 +838,8 @@ function getISOFromDuration(data, start, offset) {
 	return str.substring(0, str.length - 1) + "" + getTZ(data);
 }
 
+var lastFoundTimeZone = "00:00";
+
 function getTZ(data) {
 	if(typeof (data.timeZone) == "undefined") {
 		if(typeof (data.timeZoneId) == "undefined") {
@@ -837,12 +852,13 @@ function getTZ(data) {
 			if(ix < 0) {
 				// Assume OK?
 				updateSM("Assuming TimeZone has no TimeZoneId? : " + data.timeZoneId);
-				return data.timeZoneId;
+				return lastFoundTimeZone;
 			}
-
+			lastFoundTimeZone = data.timeZoneId.substring(ix);
 			return data.timeZoneId.substring(ix);
 		}
 	} else {
+		lastFoundTimeZone = data.TimeZone;
 		return data.timeZone;
 	}
 }
